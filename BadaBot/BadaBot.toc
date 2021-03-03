@@ -1,0 +1,16 @@
+﻿## Interface: 11306
+## Title: BadaBot
+## Version: 0.1
+## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3
+## SavedVariables: BadaBotDB
+## DefaultState: enabled
+
+#@no-lib-strip@
+Libs\LibStub\LibStub.lua
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+#@end-no-lib-strip@
+
+BadaBot.lua
