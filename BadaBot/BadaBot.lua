@@ -6,8 +6,7 @@ local player = UnitName"player"
 
 BadaBot.dbDefault = {
 	realm = {
-		fullName = '',
-		partialName = '',
+		active = false,
 		channel = '',
 		invite = true,
 		inviteStr = '11',
@@ -27,23 +26,11 @@ function BadaBot:OnInitialize()
 	self.db = db.realm
 
 	self:BuildOptions()
-	self.enabled = false
 
-	for name in string.gmatch(self.db.fullName, '[^(|n)]+') do
-		if name == player then
-			self.enabled = true
-		end
-	end
-	for pName in string.gmatch(self.db.partialName, '[^(|n)]+') do
-		if string.match(player, pName) then
-			self.enabled = true
-		end
-	end
+	if self.db.active then self:TurnOn() end
 
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(self.name, self.optionsTable)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(self.name, self.name, nil)
-
-	if self.enabled then self:TurnOn() end
 
 	SLASH_BadaBot1 = "/ㅂㄷ"
 	SLASH_BadaBot2 = "/바다"
@@ -71,26 +58,26 @@ function BadaBot:OnInitialize()
 end
 
 function BadaBot:Toggle()
-	if self.enabled then
+	if self.db.active then
 		self:TurnOff()
 	else
 		self:TurnOn()
 	end
-	return self.enabled
+	return self.db.active
 end
 function BadaBot:TurnOn()
 	self:RegisterEvent("CHAT_MSG_CHANNEL")
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	p("활성화 - /qe /ㅂㄷ /바다 로 토글")
-	self.enabled = true
+	self.db.active = true
 end
 function BadaBot:TurnOff()
 	self:UnregisterEvent("CHAT_MSG_CHANNEL")
 	self:UnregisterEvent("CHAT_MSG_WHISPER")
 	self:UnregisterEvent("GROUP_ROSTER_UPDATE")
 	p("비활성화 - /qe /ㅂㄷ /바다 로 토글")
-	self.enabled = false
+	self.db.active = false
 end
 
 function BadaBot:CHAT_MSG_WHISPER(_,text,_,_,_,unitName,_,_,_,channel)
@@ -197,26 +184,13 @@ function BadaBot:BuildOptions()
 						name = self.name..' 동작',
 						type = 'toggle',
 						order = 1,
-						get = function(info) return self.enabled end,
 						set = function(info, value) return self:Toggle() end,
 					},
 					nameDesc = {
-						name = '자동 동작 설정|n입력된 이름과 일치하는 캐릭터 접속 시 '..self.name..' 자동 실행|n여러 가지일 때에는 엔터로 구분',
+						name = '/qe /ㅂㄷ /바다 명령어로도 토글 가능',
 						type = 'description',
 						width = 'full',
 						order = 11,
-					},
-					fullName = {
-						name = '이름 전체 일치',
-						type = 'input',
-						multiline = 8,
-						order = 21,
-					},
-					partialName = {
-						name = '이름 부분 일치',
-						type = 'input',
-						multiline = 8,
-						order = 31,
 					},
 					chDesc = {
 						name = '기본: 귓속말로 동작|n채널: 채널명 입력시 해당 채널 메시지로도 동작',
