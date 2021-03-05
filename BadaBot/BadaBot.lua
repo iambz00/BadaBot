@@ -31,14 +31,14 @@ function BadaBot:OnInitialize()
 	self:BuildOptions()
 	self.enabled = false
 
-	for names in string.gmatch(self.db.fullName, '[^(|n)]+') do
-		self.enabled = true
+	for name in string.gmatch(self.db.fullName, '[^(|n)]+') do
+		if name == player then
+			self.enabled = true
+		end
 	end
-	if not self.enabled then
-		for pNames in string.gmatch(self.db.partialName, '[^(|n)]+') do
-			if string.match(player, pNames) then
-				self.enabled = true
-			end
+	for pName in string.gmatch(self.db.partialName, '[^(|n)]+') do
+		if string.match(player, pName) then
+			self.enabled = true
 		end
 	end
 
