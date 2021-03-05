@@ -6,17 +6,15 @@ local player = UnitName"player"
 
 BadaBot.dbDefault = {
 	realm = {
-		[player] = {
-			fullName = '',
-			partialName = '',
-			channel = '',
-			invite = true,
-			inviteStr = '11',
-			reset = true,
-			resetStr = '22',
-			follow = true,
-			followStr = '33',
-		}
+		fullName = '',
+		partialName = '',
+		channel = '',
+		invite = true,
+		inviteStr = '11',
+		reset = true,
+		resetStr = '22',
+		follow = true,
+		followStr = '33',
 	}
 }
 
@@ -26,7 +24,7 @@ local p = function(str) print(MSG_PREFIX..str..MSG_SUFFIX) end
 
 function BadaBot:OnInitialize()
 	local db = LibStub("AceDB-3.0"):New("BadaBotDB", self.dbDefault)
-	self.db = db.realm[player]
+	self.db = db.realm
 
 	self:BuildOptions()
 	self.enabled = false
@@ -41,6 +39,9 @@ function BadaBot:OnInitialize()
 			self.enabled = true
 		end
 	end
+
+	LibStub("AceConfig-3.0"):RegisterOptionsTable(self.name, self.optionsTable)
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(self.name, self.name, nil)
 
 	if self.enabled then self:TurnOn() end
 
@@ -208,15 +209,13 @@ function BadaBot:BuildOptions()
 					fullName = {
 						name = '이름 전체 일치',
 						type = 'input',
-						multiline = 5,
-						width = 0.4,
+						multiline = 8,
 						order = 21,
 					},
 					partialName = {
 						name = '이름 부분 일치',
 						type = 'input',
-						multiline = 5,
-						width = 0.4,
+						multiline = 8,
 						order = 31,
 					},
 					chDesc = {
@@ -241,16 +240,17 @@ function BadaBot:BuildOptions()
 						name = '자동 초대',
 						type = 'group',
 						inline = true,
+						order = 101,
 						args = {
 							invite = {
 								name = '사용',
 								type = 'toggle',
-								set = function(info, value) self.db[info[#info] ] = value
-										self:SetAnnounceInterrupt() end,
+								order = 1,
 							},
 							inviteStr = {
 								name = '초대 문자열',
 								type = 'input',
+								order = 2,
 							},
 						}
 					},
@@ -259,14 +259,17 @@ function BadaBot:BuildOptions()
 						name = '자동 리셋',
 						type = 'group',
 						inline = true,
+						order = 201,
 						args = {
 							reset = {
 								name = '사용',
 								type = 'toggle',
+								order = 1,
 							},
 							resetStr = {
 								name = '리셋 문자열',
 								type = 'input',
+								order = 2,
 							},
 						}
 					},
@@ -275,14 +278,17 @@ function BadaBot:BuildOptions()
 						name = '자동 따라가기',
 						type = 'group',
 						inline = true,
+						order = 301,
 						args = {
 							follow = {
 								name = '사용',
 								type = 'toggle',
+								order = 1,
 							},
 							followStr = {
 								name = '따라가기 문자열',
 								type = 'input',
+								order = 2,
 							},
 						}
 					},
