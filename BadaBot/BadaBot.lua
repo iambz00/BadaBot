@@ -14,6 +14,8 @@ BadaBot.dbDefault = {
 		resetStr = '22',
 		follow = true,
 		followStr = '33',
+		unFollow = true,
+		unFollowStr = '44',
 	}
 }
 
@@ -97,6 +99,8 @@ function BadaBot:Handler(text, unitName)
 		self:ResetInstance(unitName)
 	elseif text == self.db.followStr then
 		self:Follow(unitName)
+	elseif text == self.db.unFollowStr then
+		self:Unfollow()
 	end
 end
 
@@ -133,12 +137,27 @@ function BadaBot:Follow(unitName)
 	end
 end
 
+function BadaBot:Unfollow()
+	if self.db.unFollow then
+		FollowUnit("player")
+		SendChatMessage("따라가기 중지", "WHISPER", nil, unitName)
+	end
+end
+
+--[[
+name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(raidIndex);
+
+rank : 2 is leader, 1 is assistant, 0 normal
+]]
 function BadaBot:GROUP_ROSTER_UPDATE(...)
+	local n = GetNumGroupMembers() or 1
 	if IsInRaid() then
---		PromoteToAssistant("raid"..n)
-		--for i=1, n do
-			--PromoteToAssistant("raid"..i)
-		--end
+		for i = 1, n do
+			local _, rank = GetRaidRosterInfo(n)
+			if rank < 1 then
+				PromoteToAssistant("raid"..i)
+			end
+		end
 	end
 end
 
@@ -267,6 +286,24 @@ function BadaBot:BuildOptions()
 						}
 					},
 
+					unFollowGroup = {
+						name = '따라가기 중지',
+						type = 'group',
+						inline = true,
+						order = 401,
+						args = {
+							unFollow = {
+								name = '사용',
+								type = 'toggle',
+								order = 1,
+							},
+							unFollowStr = {
+								name = '따라가기 문자열',
+								type = 'input',
+								order = 2,
+							},
+						}
+					},
 
 				}
 			},
