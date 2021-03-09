@@ -29,6 +29,18 @@ function BadaBot:OnInitialize()
 
 	self:BuildOptions()
 
+	-- Disband btn
+	local btn = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+	btn:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+	btn:SetWidth(80)
+	btn:SetHeight(24)
+	btn:SetText("그룹 해체")
+	btn:SetNormalFontObject("GameFontNormal")
+	--btn:RegisterForClicks("LeftButtonUp")	-- by default
+	btn:SetScript("OnClick", self.Disband)
+	btn:Hide()
+	self.disbandBtn = btn
+
 	if self.db.active then self:TurnOn() end
 
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(self.name, self.optionsTable)
@@ -73,6 +85,7 @@ function BadaBot:TurnOn()
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	p("활성화 - /qe /ㅂㄷ /바다 로 토글")
 	self.db.active = true
+	self.disbandBtn:Show()
 end
 function BadaBot:TurnOff()
 	self:UnregisterEvent("CHAT_MSG_CHANNEL")
@@ -80,6 +93,7 @@ function BadaBot:TurnOff()
 	self:UnregisterEvent("GROUP_ROSTER_UPDATE")
 	p("비활성화 - /qe /ㅂㄷ /바다 로 토글")
 	self.db.active = false
+	self.disbandBtn:Hide()
 end
 
 function BadaBot:CHAT_MSG_WHISPER(_,text,_,_,_,unitName,_,_,_,channel)
@@ -109,9 +123,7 @@ function BadaBot:InviteGroup(unitName)
 		local n = GetNumGroupMembers() or 1
 		if n > 4 and not IsInRaid() then
 			ConvertToRaid()
-			for i=1,n do
-				PromoteToAssistant("raid"..i)
-			end
+			SetEveryoneIsAssistant(true)
 		end
 		SendChatMessage("자동 초대 ["..unitName.."]", "WHISPER", nil, unitName)
 		InviteUnit(unitName)
@@ -150,14 +162,8 @@ name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML =
 rank : 2 is leader, 1 is assistant, 0 normal
 ]]
 function BadaBot:GROUP_ROSTER_UPDATE(...)
-	local n = GetNumGroupMembers() or 1
-	if IsInRaid() then
-		for i = 1, n do
-			local _, rank = GetRaidRosterInfo(n)
-			if rank < 1 then
-				PromoteToAssistant("raid"..i)
-			end
-		end
+	if IsInRaid() and UnitIsGroupLeader("player") and not IsEveryoneAssistant() then
+		SetEveryoneIsAssistant(true)
 	end
 end
 
@@ -182,6 +188,26 @@ function BadaBot:ResetInstance(unitName)
 			end
 		else
 			SendChatMessage("같은 파티가 아닌데유", "WHISPER", nil, unitName)
+		end
+	end
+end
+
+--BadaBot.Disband = function(...)
+function BadaBot:Disband()
+	local n = GetNumGroupMembers() or 1
+	if n < 2 then return end
+	if not UnitIsGroupLeader("player") then return end
+	local group = ""
+	if IsInRaid() then
+		group = "raid"
+	else
+		group = "party"
+	end
+	SendChatMessage("파티/공격대 해체", group)
+	for i = 1, n do
+		local unitName = UnitName(group..i)
+		if not (unitName == player) then
+			UninviteUnit(group..i)
 		end
 	end
 end
