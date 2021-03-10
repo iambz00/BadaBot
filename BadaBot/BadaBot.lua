@@ -6,16 +6,18 @@ local player = UnitName"player"
 
 BadaBot.dbDefault = {
 	realm = {
-		active = false,
-		channel = '',
-		invite = true,
-		inviteStr = '11',
-		reset = true,
-		resetStr = '22',
-		follow = true,
-		followStr = '33',
-		unFollow = true,
-		unFollowStr = '44',
+		[player] = {
+			active = false,
+			channel = '',
+			invite = true,
+			inviteStr = '11',
+			reset = true,
+			resetStr = '22',
+			follow = true,
+			followStr = '33',
+			unFollow = true,
+			unFollowStr = '44',
+		}
 	}
 }
 
@@ -25,7 +27,7 @@ local p = function(str) print(MSG_PREFIX..str..MSG_SUFFIX) end
 
 function BadaBot:OnInitialize()
 	local db = LibStub("AceDB-3.0"):New("BadaBotDB", self.dbDefault)
-	self.db = db.realm
+	self.db = db.realm[player]
 
 	self:BuildOptions()
 
@@ -101,7 +103,7 @@ function BadaBot:CHAT_MSG_WHISPER(_,text,_,_,_,unitName,_,_,_,channel)
 end
 
 function BadaBot:CHAT_MSG_CHANNEL(_,text,_,_,_,unitName,_,_,_,channel)
-	if strfind(channel, self.db.channel) then
+	if strfind(string.upper(channel), string.upper(self.db.channel)) then
 		self:Handler(trim(text), unitName)
 	end
 end
