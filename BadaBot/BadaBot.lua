@@ -120,7 +120,7 @@ function BadaBot:Handler(text, unitName)
 	elseif text == self.db.followStr then
 		self:Follow(unitName)
 	elseif text == self.db.unFollowStr then
-		self:Unfollow()
+		self:Unfollow(unitName)
 	end
 end
 
@@ -155,7 +155,7 @@ function BadaBot:Follow(unitName)
 	end
 end
 
-function BadaBot:Unfollow()
+function BadaBot:Unfollow(unitName)
 	if self.db.unFollow then
 		FollowUnit("player")
 		SendChatMessage("따라가기 중지", "WHISPER", nil, unitName)
@@ -364,7 +364,7 @@ function BadaBot:BuildOptions()
 								values = {
 									no = "아니오",
 									yes = "예",
-								}
+								},
 								order = 2,
 							},
 						}
