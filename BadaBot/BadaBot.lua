@@ -17,6 +17,8 @@ BadaBot.dbDefault = {
 			followStr = '33',
 			unFollow = true,
 			unFollowStr = '44',
+			readyCheck = true,
+			readyCheckResponse = 'yes',
 		}
 	}
 }
@@ -85,6 +87,7 @@ function BadaBot:TurnOn()
 	self:RegisterEvent("CHAT_MSG_CHANNEL")
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("READY_CHECK")
 	p("활성화 - /qe /ㅂㄷ /바다 로 토글")
 	self.db.active = true
 	self.disbandBtn:Show()
@@ -93,6 +96,7 @@ function BadaBot:TurnOff()
 	self:UnregisterEvent("CHAT_MSG_CHANNEL")
 	self:UnregisterEvent("CHAT_MSG_WHISPER")
 	self:UnregisterEvent("GROUP_ROSTER_UPDATE")
+	self:UnregisterEvent("READY_CHECK")
 	p("비활성화 - /qe /ㅂㄷ /바다 로 토글")
 	self.db.active = false
 	self.disbandBtn:Hide()
@@ -214,6 +218,16 @@ function BadaBot:Disband()
 	end
 end
 
+function BadaBot:READY_CHECK()
+	if self.db.readyCheck then
+		if self.db.readyCheckResponse == 'yes' then
+			ConfirmReadyCheck(1)
+		else
+			ConfirmReadyCheck()
+		end
+	end
+end
+
 function BadaBot:BuildOptions()
 	self.optionsTable = {
 		name = self.name,
@@ -328,6 +342,29 @@ function BadaBot:BuildOptions()
 							unFollowStr = {
 								name = '따라가기 문자열',
 								type = 'input',
+								order = 2,
+							},
+						}
+					},
+
+					readyCheckGroup = {
+						name = '전투준비 수락',
+						type = 'group',
+						inline = true,
+						order = 501,
+						args = {
+							readyCheck = {
+								name = '사용',
+								type = 'toggle',
+								order = 1,
+							},
+							readyCheckResponse = {
+								name = '응답 선택',
+								type = 'select',
+								values = {
+									no = "아니오",
+									yes = "예",
+								}
 								order = 2,
 							},
 						}
