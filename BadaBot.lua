@@ -10,6 +10,7 @@ BadaBot.dbDefault = {
 			active = false,
 			channel = '',
 			invite = true,
+			inviteRaid = false,
 			inviteStr = '11',
 			reset = true,
 			resetStr = '22',
@@ -126,11 +127,6 @@ end
 
 function BadaBot:InviteGroup(unitName)
 	if self.db.invite then
-		local n = GetNumGroupMembers() or 1
-		if n > 4 and not IsInRaid() then
-			ConvertToRaid()
-			SetEveryoneIsAssistant(true)
-		end
 		SendChatMessage("자동 초대 ["..unitName.."]", "WHISPER", nil, unitName)
 		InviteUnit(unitName)
 	end
@@ -162,14 +158,20 @@ function BadaBot:Unfollow(unitName)
 	end
 end
 
---[[
-name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(raidIndex);
-
-rank : 2 is leader, 1 is assistant, 0 normal
-]]
 function BadaBot:GROUP_ROSTER_UPDATE(...)
-	if IsInRaid() and UnitIsGroupLeader("player") and not IsEveryoneAssistant() then
-		SetEveryoneIsAssistant(true)
+	if IsInRaid() then
+		if UnitIsGroupLeader("player") and not IsEveryoneAssistant() then
+			SetEveryoneIsAssistant(true)
+		end
+	else
+		if self.db.inviteRaid and UnitIsGroupLeader("player") then
+			ConvertToRaid()
+		else
+			local n = GetNumGroupMembers() or 1
+			if n > 5 then 
+				ConvertToRaid()
+			end
+		end
 	end
 end
 
@@ -282,10 +284,15 @@ function BadaBot:BuildOptions()
 								type = 'toggle',
 								order = 1,
 							},
+							inviteRaid = {
+								name = '공격대 구성',
+								type = 'toggle',
+								order = 2,
+							},
 							inviteStr = {
 								name = '초대 문자열',
 								type = 'input',
-								order = 2,
+								order = 3,
 							},
 						}
 					},
