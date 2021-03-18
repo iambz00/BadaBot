@@ -37,9 +37,9 @@ function BadaBot:OnInitialize()
 	-- Disband btn
 	local btn = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
 	btn:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
-	btn:SetWidth(80)
-	btn:SetHeight(24)
-	btn:SetText("그룹 해체")
+	btn:SetWidth(30)
+	btn:SetHeight(20)
+	btn:SetText("해체")
 	btn:SetNormalFontObject("GameFontNormal")
 	--btn:RegisterForClicks("LeftButtonUp")	-- by default
 	btn:SetScript("OnClick", self.Disband)
