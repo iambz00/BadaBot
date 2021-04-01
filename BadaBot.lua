@@ -178,18 +178,18 @@ end
 function BadaBot:ResetInstance(unitName)
 	if self.db.reset then
 		if UnitInParty(unitName) or UnitInRaid(unitName) then
-			if self.ticker and not self.ticker:IsCancelled() then
+			if self.timer and not self.timer:IsCancelled() then
 				SendChatMessage("진행 중인 리셋 있음", "WHISPER", nil, unitName)
 			else
 				if UnitIsGroupLeader("player") then
 					SendChatMessage("오프라인 되면 자동 리셋", "WHISPER", nil, unitName)
-					self.ticker = C_Timer.NewTicker(1, function()
-						if not UnitIsConnected(unitName) then
-							ResetInstances()
-							BadaBot.ticker:Cancel()
-							BadaBot.ticker = nil
-						end
-					end, 30)
+					self.check = unitName
+					self:RegisterEvent("OnUpdate", "ResetWhenOffline")
+					self.timer = C_Timer.NewTimer(30, function(tself)
+						SendChatMessage("리셋 취소 - 30초 경과", "WHISPER", nil, unitName)
+						self:UnregisterEvent("OnUpdate")
+						tself:Cancel()
+					end)
 				else
 					SendChatMessage("파장이 아닌데유", "WHISPER", nil, unitName)
 				end
@@ -197,6 +197,14 @@ function BadaBot:ResetInstance(unitName)
 		else
 			SendChatMessage("같은 파티가 아닌데유", "WHISPER", nil, unitName)
 		end
+	end
+end
+
+function BadaBot:ResetWhenOffline()
+	if not UnitIsConnected(self.check) then
+		ResetInstances()
+		self.timer:Cancel()
+		self:UnregisterEvent("OnUpdate")
 	end
 end
 
