@@ -15,6 +15,7 @@ BadaBot.dbDefault = {
 			reset = true,
 			resetStr = '22',
 			follow = true,
+			followAnswer = true,
 			followStr = '33',
 			unFollow = true,
 			unFollowStr = '44',
@@ -126,14 +127,14 @@ function BadaBot:Handler(text, unitName)
 end
 
 function BadaBot:InviteGroup(unitName)
-	if self.db.invite then
+	if self.db.invite and unitName ~= player then
 		SendChatMessage("자동 초대 ["..unitName.."]", "WHISPER", nil, unitName)
 		InviteUnit(unitName)
 	end
 end
 
 function BadaBot:Follow(unitName)
-	if self.db.follow then
+	if self.db.follow and unitName ~= player then
 		local unit, index  = "", UnitInRaid(unitName)
 		if IsInRaid() and index then
 			unit = "raid"..index
@@ -146,7 +147,9 @@ function BadaBot:Follow(unitName)
 		end
 		if unit ~= "" then
 			FollowUnit(unit)
-			SendChatMessage("따라가기 ["..unitName.."]", "WHISPER", nil, unitName)
+			if self.db.followAnswer then
+				SendChatMessage("따라가기 ["..unitName.."]", "WHISPER", nil, unitName)
+			end
 		end
 	end
 end
@@ -176,19 +179,19 @@ function BadaBot:GROUP_ROSTER_UPDATE(...)
 end
 
 function BadaBot:ResetInstance(unitName)
-	if self.db.reset then
+	if self.db.reset and unitName ~= player then
 		if UnitInParty(unitName) or UnitInRaid(unitName) then
 			if self.timer and not self.timer:IsCancelled() then
 				SendChatMessage("진행 중인 리셋 있음", "WHISPER", nil, unitName)
 			else
 				if UnitIsGroupLeader("player") then
 					SendChatMessage("오프라인 되면 자동 리셋", "WHISPER", nil, unitName)
-					self.check = unitName
-					self:RegisterEvent("OnUpdate", "ResetWhenOffline")
+					self:RegisterEvent("PARTY_MEMBER_DISABLE", "ResetWhenOffline")
 					self.timer = C_Timer.NewTimer(30, function(tself)
 						SendChatMessage("리셋 취소 - 30초 경과", "WHISPER", nil, unitName)
-						self:UnregisterEvent("OnUpdate")
+						BadaBot:UnregisterEvent("PARTY_MEMBER_DISABLE")
 						tself:Cancel()
+						BadaBot.timer = nil
 					end)
 				else
 					SendChatMessage("파장이 아닌데유", "WHISPER", nil, unitName)
@@ -201,11 +204,11 @@ function BadaBot:ResetInstance(unitName)
 end
 
 function BadaBot:ResetWhenOffline()
-	if not UnitIsConnected(self.check) then
-		ResetInstances()
-		self.timer:Cancel()
-		self:UnregisterEvent("OnUpdate")
-	end
+	p("인스턴스 리셋")
+	ResetInstances()
+	self.timer:Cancel()
+	self.timer = nil
+	self:UnregisterEvent("PARTY_MEMBER_DISABLE")
 end
 
 --BadaBot.Disband = function(...)
@@ -335,10 +338,15 @@ function BadaBot:BuildOptions()
 								type = 'toggle',
 								order = 1,
 							},
+							followAnswer = {
+								name = '귓속말 대답',
+								type = 'toggle',
+								order = 2,
+							},
 							followStr = {
 								name = '따라가기 문자열',
 								type = 'input',
-								order = 2,
+								order = 3,
 							},
 						}
 					},
