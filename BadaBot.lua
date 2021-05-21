@@ -1,4 +1,4 @@
-﻿local addonName, addon = ...
+local addonName, addon = ...
 BadaBot = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceEvent-3.0")
 BadaBot.name = addonName
 BadaBot.version = GetAddOnMetadata(addonName, "Version")
@@ -28,6 +28,7 @@ BadaBot.dbDefault = {
 local MSG_PREFIX = "|cff00ff00■ |cffffaa00"..addonName.."|r "
 local MSG_SUFFIX = " |cff00ff00■|r"
 local p = function(str) print(MSG_PREFIX..str..MSG_SUFFIX) end
+local trim = function(str) return str:gsub("^%s*",""):gsub("%s*$","") end
 
 function BadaBot:OnInitialize()
 	local db = LibStub("AceDB-3.0"):New("BadaBotDB", self.dbDefault)
