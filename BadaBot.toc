@@ -1,6 +1,6 @@
-﻿## Interface: 11306
+﻿## Interface: 20501
 ## Title: BadaBot
-## Version: 0.92
+## Version: 0.95
 ## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3
 ## SavedVariables: BadaBotDB
 ## DefaultState: enabled
