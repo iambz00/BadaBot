@@ -11,6 +11,7 @@ BadaBot.dbDefault = {
 			channel = '',
 			invite = true,
 			inviteRaid = false,
+			inviteAssist = false,
 			inviteStr = '11',
 			reset = true,
 			resetStr = '22',
@@ -59,21 +60,6 @@ function BadaBot:OnInitialize()
 
 	SlashCmdList["BadaBot"] = function(msg)
 		self:Toggle()
---[[
-		local cmd, val = msg:match("^(%S*)%s*(.*)")
-		if cmd == "차단" or cmd == "int" or cmd == "interrupt" then
-			channel = channelList[val:upper()]
-			if channel then
-				self.db.announceInterrupt = true
-				self.db.announceChannel = channel
-			else
-				self.db.announceInterrupt = false
-			end
-			self:SetAnnounceInterrupt()
-		else
-			InterfaceOptionsFrame_OpenToCategory(self.name)
-			InterfaceOptionsFrame_OpenToCategory(self.name)
-		end]]
 	end
 
 end
@@ -129,6 +115,9 @@ end
 
 function BadaBot:InviteGroup(unitName)
 	if self.db.invite and unitName ~= player then
+		if (not IsInRaid()) and (GetNumGroupMembers() < 5) then
+			ConvertToRaid()
+		end
 		SendChatMessage("자동 초대 ["..unitName.."]", "WHISPER", nil, unitName)
 		InviteUnit(unitName)
 	end
@@ -163,56 +152,58 @@ function BadaBot:Unfollow(unitName)
 end
 
 function BadaBot:GROUP_ROSTER_UPDATE(...)
-	if IsInRaid() then
-		if UnitIsGroupLeader("player") and not IsEveryoneAssistant() then
+	if self.resetUnit then
+		if not UnitIsConnected(self.resetUnit) then
+			self.resetUnit = nil
+			self.resetTimeout:Cancel()
+			self.resetTimeout = nil
+			C_Timer.After(1, function()
+				p("인스턴스 리셋")
+				ResetInstances()
+			end)
+		end
+	end
+	if UnitIsGroupLeader("player") then
+		if self.db.inviteRaid then
+			ConvertToRaid()
+		elseif self.db.inviteAssist and IsInRaid() and not IsEveryoneAssistant() then
 			SetEveryoneIsAssistant(true)
 		end
-	else
-		if self.db.inviteRaid and UnitIsGroupLeader("player") then
-			ConvertToRaid()
-		else
-			local n = GetNumGroupMembers() or 1
-			if n > 5 then 
-				ConvertToRaid()
-			end
-		end
 	end
 end
 
+--[[
+name, rank, subgroup, level, class, fileName, 
+  zone, online, isDead, role, isML, combatRole = GetRaidRosterInfo(raidIndex);
+]]
 function BadaBot:ResetInstance(unitName)
-	if self.db.reset and unitName ~= player then
-		if UnitInParty(unitName) or UnitInRaid(unitName) then
-			if self.timer and not self.timer:IsCancelled() then
-				SendChatMessage("진행 중인 리셋 있음", "WHISPER", nil, unitName)
-			else
-				if UnitIsGroupLeader("player") then
-					SendChatMessage("오프라인 되면 자동 리셋", "WHISPER", nil, unitName)
-					self:RegisterEvent("PARTY_MEMBER_DISABLE", "ResetWhenOffline")
-					self.timer = C_Timer.NewTimer(30, function(tself)
-						SendChatMessage("리셋 취소 - 30초 경과", "WHISPER", nil, unitName)
-						BadaBot:UnregisterEvent("PARTY_MEMBER_DISABLE")
-						tself:Cancel()
-						BadaBot.timer = nil
-					end)
-				else
-					SendChatMessage("파장이 아닌데유", "WHISPER", nil, unitName)
-				end
-			end
-		else
-			SendChatMessage("같은 파티가 아닌데유", "WHISPER", nil, unitName)
-		end
+	if not (self.db.reset and unitName ~= player) then return end
+	if not UnitIsGroupLeader("player") then
+		SendChatMessage("파장이 아님", "WHISPER", nil, unitName)
+		return
+	end
+	if not (UnitInRaid(unitName) or UnitInParty(unitName)) then
+		SendChatMessage("같은 파티가 아님", "WHISPER", nil, unitName)
+		return
+	end
+
+	if self.resetUnit then
+		SendChatMessage("진행 중인 리셋 있음 - ["..self.resetUnit.."] 가 요청", "WHISPER", nil, unitName)
+	else
+		SendChatMessage("오프라인 되면 자동 리셋(30초 기한)", "WHISPER", nil, unitName)
+
+		self.resetUnit = unitName
+		self.resetTimeout = C_Timer.NewTimer(30, function(tself)
+			SendChatMessage("리셋 취소(30초 경과)", "WHISPER", nil, unitName)
+			tself:Cancel()
+			BadaBot.resetUnit = nil
+			BadaBot.resetTimeout = nil
+		end)
 	end
 end
 
-function BadaBot:ResetWhenOffline()
-	p("인스턴스 리셋")
-	ResetInstances()
-	self.timer:Cancel()
-	self.timer = nil
-	self:UnregisterEvent("PARTY_MEMBER_DISABLE")
-end
+------------------------------------
 
---BadaBot.Disband = function(...)
 function BadaBot:Disband()
 	local n = GetNumGroupMembers() or 1
 	if n < 2 then return end
@@ -224,7 +215,7 @@ function BadaBot:Disband()
 		group = "party"
 	end
 	SendChatMessage("파티/공격대 해체", group)
-	for i = 1, n do
+	for i = n,1,-1 do
 		local unitName = UnitName(group..i)
 		if not (unitName == player) then
 			UninviteUnit(group..i)
@@ -301,10 +292,15 @@ function BadaBot:BuildOptions()
 								type = 'toggle',
 								order = 2,
 							},
+							inviteAssist = {
+								name = '올부공(전원 부공격대장)',
+								type = 'toggle',
+								order = 3,
+							},
 							inviteStr = {
 								name = '초대 문자열',
 								type = 'input',
-								order = 3,
+								order = 4,
 							},
 						}
 					},

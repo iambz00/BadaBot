@@ -1,6 +1,6 @@
 ## Interface: 20503
 ## Title: BadaBot
-## Version: 1.01
+## Version: 1.1
 ## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3
 ## SavedVariables: BadaBotDB
 ## DefaultState: enabled
