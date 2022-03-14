@@ -5,24 +5,22 @@ BadaBot.version = GetAddOnMetadata(addonName, "Version")
 local player = UnitName"player"
 
 BadaBot.dbDefault = {
-	realm = {
-		[player] = {
-			active = false,
-			channel = '',
-			invite = true,
-			inviteRaid = false,
-			inviteAssist = false,
-			inviteStr = '11',
-			reset = true,
-			resetStr = '22',
-			follow = true,
-			followAnswer = true,
-			followStr = '33',
-			unFollow = true,
-			unFollowStr = '44',
-			readyCheck = true,
-			readyCheckResponse = 'yes',
-		}
+	char = {
+		active = false,
+		channel = '',
+		invite = true,
+		inviteRaid = false,
+		inviteAssist = false,
+		inviteStr = '11',
+		reset = true,
+		resetStr = '22',
+		follow = true,
+		followAnswer = true,
+		followStr = '33',
+		unFollow = true,
+		unFollowStr = '44',
+		readyCheck = true,
+		readyCheckResponse = 'yes',
 	}
 }
 
@@ -33,7 +31,12 @@ local trim = function(str) return str:gsub("^%s*",""):gsub("%s*$","") end
 
 function BadaBot:OnInitialize()
 	local db = LibStub("AceDB-3.0"):New("BadaBotDB", self.dbDefault)
-	self.db = db.realm[player]
+	if db.realm[player] then
+		db.char = db.realm[player]
+		db.realm[player] = nil
+	end
+
+	self.db = db.char
 
 	self:BuildOptions()
 
